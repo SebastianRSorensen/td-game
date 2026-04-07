@@ -1,20 +1,16 @@
-"""Backwards-compatible facade for the WILDCORE core simulation package."""
-
-from wildcore import (
+from .core import (
     AdaptationDirector,
     AdaptationForecast,
     Battlefield,
     Enemy,
     Faction,
-    Game,
     HybridizationEngine,
-    RunResources,
     TerrainState,
     Tile,
     Tower,
     WaveMetrics,
-    run_demo,
 )
+from .simulation import Game, RunResources, run_demo
 
 __all__ = [
     "AdaptationDirector",
@@ -22,16 +18,12 @@ __all__ = [
     "Battlefield",
     "Enemy",
     "Faction",
-    "Game",
     "HybridizationEngine",
-    "RunResources",
     "TerrainState",
     "Tile",
     "Tower",
     "WaveMetrics",
+    "Game",
+    "RunResources",
     "run_demo",
 ]
-
-
-if __name__ == "__main__":
-    run_demo()
