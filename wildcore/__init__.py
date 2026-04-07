@@ -10,7 +10,16 @@ from .core import (
     Tower,
     WaveMetrics,
 )
-from .simulation import Game, RunResources, run_demo
+from .simulation import (
+    Biome,
+    Commander,
+    Game,
+    NodeType,
+    RunNode,
+    RunReport,
+    RunResources,
+    run_demo,
+)
 
 __all__ = [
     "AdaptationDirector",
@@ -23,7 +32,12 @@ __all__ = [
     "Tile",
     "Tower",
     "WaveMetrics",
+    "Biome",
+    "Commander",
     "Game",
+    "NodeType",
+    "RunNode",
+    "RunReport",
     "RunResources",
     "run_demo",
 ]
