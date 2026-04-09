@@ -5,3 +5,4 @@ res://scripts/main.gd
 res://scripts/wave_manager.gd
 res://scripts/ui/tower_panel.gd
 res://scripts/tower_entity.gd
+res://scripts/projectile.gd

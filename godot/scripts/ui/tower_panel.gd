@@ -121,13 +121,42 @@ func _on_tower_pressed(index: int, btn: Button) -> void:
 func _on_tower_hover(index: int) -> void:
 	var td: Dictionary = GameManager.tower_defs[index]
 	var hud_node := get_node_or_null("/root/Main/UI/HUD")
-	if hud_node and hud_node.has_method("show_info"):
-		var info := "%s | %s | Element: %s | Range: %d" % [
-			td["name"], td["role"], td["element"], td["range"]
-		]
-		if td["damage"] > 0:
-			info += " | DPS: %.1f" % (td["damage"] * td["attack_speed"])
-		hud_node.show_info(info)
+	if not hud_node or not hud_node.has_method("show_info"):
+		return
+
+	var info := "%s | %s | Element: %s | Range: %d" % [
+		td["name"], td["role"], td["element"], td["range"]
+	]
+
+	match td["role"]:
+		"Economy":
+			info += " | +14 scrap/wave, +0.02 pressure/wave"
+		"Support":
+			if td["name"] == "Bloom Shrine":
+				info += " | +20% damage to nearby towers"
+			elif td["damage"] > 0:
+				info += " | DPS: %.1f" % (td["damage"] * td["attack_speed"])
+		"AoE":
+			info += " | DPS: %.1f | Splash damage in area" % (td["damage"] * td["attack_speed"])
+		"Chain":
+			info += " | DPS: %.1f | Bounces to nearby enemies" % (td["damage"] * td["attack_speed"])
+		"Finisher":
+			info += " | DPS: %.1f | Up to 2x on low-HP enemies" % (td["damage"] * td["attack_speed"])
+		"Aura":
+			info += " | Pulses damage to all enemies in range"
+		"Volatile":
+			info += " | DPS: %.1f | 1.5x damage, can misfire" % (td["damage"] * td["attack_speed"])
+		"Late":
+			info += " | DPS: %.1f | Ramps to 2x during wave" % (td["damage"] * td["attack_speed"])
+		"Anchor":
+			info += " | DPS: %.1f | +15%% bonus, cannot be sold" % (td["damage"] * td["attack_speed"])
+		"Control":
+			info += " | DPS: %.1f | Slows enemies" % (td["damage"] * td["attack_speed"])
+		_:
+			if td["damage"] > 0:
+				info += " | DPS: %.1f" % (td["damage"] * td["attack_speed"])
+
+	hud_node.show_info(info)
 
 
 func _update_affordability() -> void:

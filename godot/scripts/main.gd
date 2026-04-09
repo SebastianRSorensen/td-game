@@ -39,6 +39,20 @@ func _unhandled_input(event: InputEvent) -> void:
 		else:
 			battlefield.set_hover_pos(Vector2i(-1, -1))
 
+	# Keyboard shortcuts
+	if event is InputEventKey and event.pressed:
+		match event.keycode:
+			KEY_SPACE:
+				_on_start_wave()
+			KEY_ESCAPE:
+				_deselect_all()
+			KEY_1:
+				Engine.time_scale = 1.0
+			KEY_2:
+				Engine.time_scale = 2.0
+			KEY_3:
+				Engine.time_scale = 3.0
+
 
 func _handle_left_click(screen_pos: Vector2) -> void:
 	var grid_pos := GameManager.world_to_grid(screen_pos)
@@ -133,6 +147,9 @@ func _on_upgrade_pressed() -> void:
 
 func _on_sell_pressed() -> void:
 	if not selected_tower or not is_instance_valid(selected_tower):
+		return
+	if selected_tower.tower_def["role"] == "Anchor":
+		hud.show_info("Anchor towers cannot be sold!", Color.YELLOW)
 		return
 	var refund := selected_tower.get_sell_value()
 	var tower_name: String = selected_tower.tower_def["name"]

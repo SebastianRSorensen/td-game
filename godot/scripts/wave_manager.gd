@@ -126,7 +126,26 @@ func _get_wave_composition(wave: int) -> Array[Dictionary]:
 						"color": Color(0.4, 0.9, 1.0),
 					})
 
+	# Inject adaptation traits into enemies
+	if GameManager.enemy_traits.size() > 0:
+		for enemy_data in result:
+			enemy_data["traits"] = GameManager.enemy_traits.duplicate()
+
 	return result
+
+
+func get_wave_preview(wave: int) -> String:
+	if wave < 1 or wave > GameManager.total_waves:
+		return ""
+	var comp := _get_wave_composition(wave)
+	var counts: Dictionary = {}
+	for enemy_data in comp:
+		var n: String = enemy_data["name"]
+		counts[n] = counts.get(n, 0) + 1
+	var parts: Array[String] = []
+	for n in counts:
+		parts.append("%dx %s" % [counts[n], n])
+	return ", ".join(parts)
 
 
 func _boss_name(biome: GameManager.Biome) -> String:

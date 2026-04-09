@@ -17,6 +17,13 @@ var start_button: Button
 var ability_button: Button
 var info_label: Label
 var traits_label: Label
+var enemies_alive_label: Label
+var wave_preview_label: Label
+var restart_button: Button
+
+# Speed control
+var speed_buttons: Array[Button] = []
+var current_speed := 1
 
 # Tower info panel
 var tower_info_panel: PanelContainer
@@ -41,6 +48,17 @@ func _ready() -> void:
 	GameManager.adaptation_forecasted.connect(_on_adaptation)
 
 	_update_display()
+	_update_wave_preview()
+
+
+func _process(_delta: float) -> void:
+	if GameManager.wave_in_progress:
+		var wm := get_node_or_null("/root/Main/WaveManager")
+		if wm:
+			enemies_alive_label.text = "Enemies: %d" % wm.enemies_alive
+			enemies_alive_label.visible = true
+	else:
+		enemies_alive_label.visible = false
 
 
 func _build_top_bar() -> void:
@@ -59,6 +77,11 @@ func _build_top_bar() -> void:
 
 	wave_label = _make_label("Wave 0/12", 28)
 	hbox.add_child(wave_label)
+
+	enemies_alive_label = _make_label("", 22)
+	enemies_alive_label.add_theme_color_override("font_color", Color(1.0, 0.4, 0.4))
+	enemies_alive_label.visible = false
+	hbox.add_child(enemies_alive_label)
 
 	biome_label = _make_label("Verdant Basin", 24)
 	biome_label.add_theme_color_override("font_color", Color(0.6, 0.85, 0.6))
@@ -97,29 +120,66 @@ func _build_top_bar() -> void:
 func _build_bottom_bar() -> void:
 	start_button = Button.new()
 	start_button.text = "  START WAVE  "
-	start_button.position = Vector2(400, 980)
-	start_button.custom_minimum_size = Vector2(240, 55)
+	start_button.position = Vector2(300, 980)
+	start_button.custom_minimum_size = Vector2(220, 55)
 	start_button.add_theme_font_size_override("font_size", 22)
 	start_button.pressed.connect(func(): start_wave_pressed.emit())
 	add_child(start_button)
 
 	ability_button = Button.new()
 	ability_button.text = "  CORE ABILITY  "
-	ability_button.position = Vector2(670, 980)
-	ability_button.custom_minimum_size = Vector2(220, 55)
+	ability_button.position = Vector2(540, 980)
+	ability_button.custom_minimum_size = Vector2(200, 55)
 	ability_button.add_theme_font_size_override("font_size", 22)
 	ability_button.pressed.connect(func(): ability_pressed.emit())
 	add_child(ability_button)
 
+	# Speed controls
+	var speed_x := 760
+	for i in [1, 2, 3]:
+		var btn := Button.new()
+		btn.text = " %dx " % i
+		btn.position = Vector2(speed_x, 988)
+		btn.custom_minimum_size = Vector2(55, 40)
+		btn.add_theme_font_size_override("font_size", 18)
+		var spd: int = i
+		btn.pressed.connect(func(): _set_speed(spd))
+		add_child(btn)
+		speed_buttons.append(btn)
+		speed_x += 62
+	_update_speed_buttons()
+
+	# Restart button (hidden until game over)
+	restart_button = Button.new()
+	restart_button.text = "  RESTART  "
+	restart_button.position = Vector2(500, 980)
+	restart_button.custom_minimum_size = Vector2(200, 55)
+	restart_button.add_theme_font_size_override("font_size", 22)
+	restart_button.visible = false
+	restart_button.pressed.connect(func():
+		Engine.time_scale = 1.0
+		GameManager.reset_game()
+		get_tree().reload_current_scene()
+	)
+	add_child(restart_button)
+
+	# Wave preview
+	wave_preview_label = Label.new()
+	wave_preview_label.position = Vector2(80, 855)
+	wave_preview_label.text = ""
+	wave_preview_label.add_theme_font_size_override("font_size", 17)
+	wave_preview_label.add_theme_color_override("font_color", Color(0.6, 0.65, 0.7))
+	add_child(wave_preview_label)
+
 	info_label = Label.new()
-	info_label.position = Vector2(80, 900)
-	info_label.text = "Select a tower from the panel, then click the grid to place it."
+	info_label.position = Vector2(80, 890)
+	info_label.text = "Select a tower from the panel, then click the grid to place it.  [Space = Start Wave]"
 	info_label.add_theme_font_size_override("font_size", 20)
 	info_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
 	add_child(info_label)
 
 	traits_label = Label.new()
-	traits_label.position = Vector2(80, 935)
+	traits_label.position = Vector2(80, 925)
 	traits_label.text = ""
 	traits_label.add_theme_font_size_override("font_size", 18)
 	traits_label.add_theme_color_override("font_color", Color(0.9, 0.5, 0.5))
@@ -128,8 +188,8 @@ func _build_bottom_bar() -> void:
 
 func _build_tower_info_panel() -> void:
 	tower_info_panel = PanelContainer.new()
-	tower_info_panel.position = Vector2(80, 780)
-	tower_info_panel.size = Vector2(500, 110)
+	tower_info_panel.position = Vector2(80, 760)
+	tower_info_panel.size = Vector2(500, 90)
 	tower_info_panel.visible = false
 	var style := StyleBoxFlat.new()
 	style.bg_color = Color(0.1, 0.1, 0.16, 0.95)
@@ -144,7 +204,6 @@ func _build_tower_info_panel() -> void:
 	vbox.add_theme_constant_override("separation", 4)
 	tower_info_panel.add_child(vbox)
 
-	# Name + level row
 	var top_row := HBoxContainer.new()
 	top_row.add_theme_constant_override("separation", 16)
 	vbox.add_child(top_row)
@@ -158,13 +217,11 @@ func _build_tower_info_panel() -> void:
 	tower_info_level.add_theme_color_override("font_color", Color(0.9, 0.8, 0.3))
 	top_row.add_child(tower_info_level)
 
-	# Stats row
 	tower_info_stats = Label.new()
 	tower_info_stats.add_theme_font_size_override("font_size", 18)
 	tower_info_stats.add_theme_color_override("font_color", Color(0.75, 0.75, 0.8))
 	vbox.add_child(tower_info_stats)
 
-	# Button row
 	var btn_row := HBoxContainer.new()
 	btn_row.add_theme_constant_override("separation", 12)
 	vbox.add_child(btn_row)
@@ -182,6 +239,33 @@ func _build_tower_info_panel() -> void:
 	sell_button.add_theme_font_size_override("font_size", 18)
 	sell_button.pressed.connect(func(): sell_pressed.emit())
 	btn_row.add_child(sell_button)
+
+
+func _set_speed(spd: int) -> void:
+	current_speed = spd
+	Engine.time_scale = float(spd)
+	_update_speed_buttons()
+
+
+func _update_speed_buttons() -> void:
+	for i in range(speed_buttons.size()):
+		var btn := speed_buttons[i]
+		if i + 1 == current_speed:
+			btn.add_theme_color_override("font_color", Color.GREEN)
+		else:
+			btn.remove_theme_color_override("font_color")
+
+
+func _update_wave_preview() -> void:
+	var next_wave := GameManager.current_wave + 1
+	if next_wave > GameManager.total_waves:
+		wave_preview_label.text = ""
+		return
+	var wm := get_node_or_null("/root/Main/WaveManager")
+	if wm and wm.has_method("get_wave_preview"):
+		wave_preview_label.text = "Next wave: %s" % wm.get_wave_preview(next_wave)
+	else:
+		wave_preview_label.text = ""
 
 
 func show_tower_info(tower: TowerEntity) -> void:
@@ -208,7 +292,13 @@ func show_tower_info(tower: TowerEntity) -> void:
 		upgrade_button.text = "  UPGRADE (%d$)  " % cost
 		upgrade_button.disabled = GameManager.scrap < cost
 
-	sell_button.text = "  SELL (%d$)  " % tower.get_sell_value()
+	# Anchor can't be sold
+	if td["role"] == "Anchor":
+		sell_button.text = "  ANCHORED  "
+		sell_button.disabled = true
+	else:
+		sell_button.text = "  SELL (%d$)  " % tower.get_sell_value()
+		sell_button.disabled = false
 
 
 func hide_tower_info() -> void:
@@ -261,10 +351,16 @@ func _on_wave_ended(_wave: int) -> void:
 		start_button.disabled = true
 		start_button.text = "  CAMPAIGN COMPLETE  "
 	_update_display()
+	_update_wave_preview()
 
 
 func _on_game_over(won: bool) -> void:
-	start_button.disabled = true
+	start_button.visible = false
+	ability_button.visible = false
+	for btn in speed_buttons:
+		btn.visible = false
+	restart_button.visible = true
+
 	if won:
 		info_label.text = "VICTORY! Campaign complete. All 12 waves cleared!"
 		info_label.add_theme_color_override("font_color", Color.GOLD)
