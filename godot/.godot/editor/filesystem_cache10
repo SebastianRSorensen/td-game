@@ -1,0 +1,17 @@
+63f7b34db8d8cdea90c76aacccf841ec
+::res://::1775734558
+::res://autoload/::1775734138
+game_manager.gd::GDScript::5854897157300312011::1775734138::0::1::::<>Node<><>0<>0<><>::
+::res://scenes/::1775734347
+main.tscn::PackedScene::-1::1775734347::0::1::::<><><>0<>0<><>::res://scripts/main.gd<>res://scripts/battlefield.gd<>res://scripts/wave_manager.gd<>res://scripts/adaptation_director.gd<>res://scripts/ui/hud.gd<>res://scripts/ui/tower_panel.gd
+::res://scripts/::1775734343
+adaptation_director.gd::GDScript::794322672692232879::1775734245::0::1::::<>Node<><>0<>0<><>::
+battlefield.gd::GDScript::1462151682535469102::1775734213::0::1::::<>Node2D<><>0<>0<><>::
+enemy_entity.gd::GDScript::7753873566367398285::1775734161::0::1::::EnemyEntity<>Node2D<><>0<>0<><>::
+main.gd::GDScript::5734455670497914584::1775734343::0::1::::<>Node2D<><>0<>0<><>::
+projectile.gd::GDScript::5040435939388028135::1775734150::0::1::::ProjectileEntity<>Node2D<><>0<>0<><>::
+tower_entity.gd::GDScript::2769786098935722301::1775734191::0::1::::TowerEntity<>Node2D<><>0<>0<><>::
+wave_manager.gd::GDScript::5873436057818038689::1775734232::0::1::::<>Node<><>0<>0<><>::
+::res://scripts/ui/::1775734297
+hud.gd::GDScript::8513741884673211618::1775734277::0::1::::<>Control<><>0<>0<><>::
+tower_panel.gd::GDScript::1282680401366377143::1775734297::0::1::::<>Control<><>0<>0<><>::

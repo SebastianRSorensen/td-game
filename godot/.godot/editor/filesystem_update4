@@ -1,0 +1,7 @@
+res://autoload/game_manager.gd
+res://scripts/ui/hud.gd
+res://scripts/enemy_entity.gd
+res://scripts/main.gd
+res://scripts/wave_manager.gd
+res://scripts/ui/tower_panel.gd
+res://scripts/tower_entity.gd

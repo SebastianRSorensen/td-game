@@ -248,7 +248,11 @@ class Game:
             return boss.pressure_bonus + (control_count * 0.01)
         return boss.pressure_bonus
 
-    def run_wave(self) -> Dict[str, object]:
+    def run_wave(
+        self,
+        tower_indices: List[int] | None = None,
+        use_ability: bool | None = None,
+    ) -> Dict[str, object]:
         if self.wave >= len(self.node_plan):
             raise RuntimeError("Run already completed")
 
@@ -256,10 +260,16 @@ class Game:
         self.wave += 1
         self.completed_nodes.append(node)
 
-        if self.resources.core_charge > 0 and self.rng.random() < 0.4:
+        should_cast = use_ability if use_ability is not None else (
+            self.resources.core_charge > 0 and self.rng.random() < 0.4
+        )
+        if should_cast and self.resources.core_charge > 0:
             self.cast_core_ability()
 
-        active = self.rng.sample(self.towers, 5)
+        if tower_indices is not None:
+            active = [self.towers[i] for i in tower_indices]
+        else:
+            active = self.rng.sample(self.towers, 5)
         damage = sum(self._apply_tower_effect(tower) for tower in active) * node.threat_multiplier
 
         burn = sum(1 for tower in active if tower.element == "fire") / 5
